@@ -1,0 +1,93 @@
+---
+title: "STATS405_HW3"
+author: "Yuan Yi Chen (Eve)"
+date: "2017<e6><92><9f><b4>6<e6><9c><88>3<e6>謑<99>"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+###A. Set up a working environment
+
+#####Step1: Setup
+```{r}
+#Remove Objects
+rm(list=ls())
+```
+```{r, message = F}
+#Clear Memory
+gc(reset=TRUE)
+```
+
+```{r, message = F}
+#Load packages
+library(readr)
+library(RMySQL)
+library(sqldf)
+```
+
+***
+
+###B. Run RSQLite
+```{r, message = F}
+library(RSQLite)
+SQLite()
+```
+
+#####Step1: dbconnect
+```{r}
+con <- dbConnect(SQLite(), db = "database.sqlite")
+```
+
+#####Step2: Check our database to ensure we have already loaded our two data sets
+```{r}
+dbListTables(con)
+#Show colnames of Diag table
+dbListFields(con, "Diag")
+#Show colnames of Prog table
+dbListFields(con, "Prog")
+```
+
+#####Step3: View our data sets
+```{r}
+#1. View Diag data set - 569 obs of 3 variables (ID_number is the key)
+junk1 <- dbSendQuery(con, paste("SELECT ID_number, Diag, mean_radius
+                        FROM Diag", sep = ""))
+diagnosis <- fetch(junk1)
+head(diagnosis, 3)
+str(diagnosis)
+```
+
+```{r}
+#2. View Prog data set - 198 obs of 4 variables (ID_number is the key)
+junk2 <- dbSendQuery(con, paste("SELECT ID_number, outcome, time, mean_radius
+                                FROM Prog", sep = ""))
+prognosis <- fetch(junk2)
+head(prognosis, 3)
+str(prognosis)
+```
+
+***
+
+###C. Perform Inner Join - Only 139 obs
+```{r}
+innerjoin <- dbGetQuery(con, "SELECT * FROM Diag
+                        INNER JOIN Prog
+                        USING (ID_number);")
+head(innerjoin)
+nrow(innerjoin)
+```
+
+***
+
+
+###D. Show the processing time of doing inner join
+```{r}
+system.time(innerjoin <- dbGetQuery(con, "SELECT * FROM Diag
+                        INNER JOIN Prog
+                                      USING (ID_number);"))
+```
+
+***
+#####This is the end of my homework 2. Thanks for your reading and grading! :)
